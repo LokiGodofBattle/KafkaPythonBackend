@@ -3,9 +3,13 @@ from confluent_kafka import Consumer
 import socket
 import threading
 import logging
+from flask import Flask, json
 
 MIN_COMMIT_COUNT = 1
-    
+
+api = Flask(__name__)
+
+event = threading.Event()
 
 def basic_consume_loop(topics):
     running = True
@@ -33,7 +37,11 @@ def basic_consume_loop(topics):
             else:
                 print("Data received", flush=True)
                 if msg.key().decode("utf-8") == "data":
-                    print(msg.value().decode("utf-8"), flush=True)
+                    global data
+                    data = msg.value().decode("utf-8")
+                    print(data, flush=True)
+                    print("event set", flush=True)
+                    event.set()
         	
                 msg_count += 1
                 if msg_count % MIN_COMMIT_COUNT == 0:
@@ -53,8 +61,16 @@ producer = Producer(conf1)
 x = threading.Thread(target=basic_consume_loop, args=(["offerings_data"],))
 x.start()
 
-input("press any key to send request")
+@api.route('/customer/getOfferings', methods=['GET'])
+def get_offerings():
+    producer.produce("offerings", key="cno", value="getOfferings")
+    producer.flush()
+    event.wait()
+    print("event finished")
+    event.clear()
+    print(data)
+    return data
 
-producer.produce("offerings", key="cno", value="getOfferings")
-producer.flush()
+api.run()
+
 print("Message send")
