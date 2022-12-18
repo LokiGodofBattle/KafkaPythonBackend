@@ -2,7 +2,10 @@ import json
 import threading
 from confluent_kafka import Consumer
 
-offerings = ["Bleistift", "Bleistift-Set", "Toaster"]
+def loadOfferings():
+    with open("offerings.txt") as file:
+        global offerings
+        offerings = [json.loads(o) for o in file.readlines()]
 
 from confluent_kafka import Producer
 import socket
@@ -39,6 +42,7 @@ def basic_consume_loop(topics):
                     raise KafkaException(msg.error())
             else:
                 if msg.key().decode("utf-8") == "cno":
+                    loadOfferings()
                     producer.produce("offerings_data", key="data", value=json.dumps(offerings))
                     producer.flush()
                     print("data send", flush=True)

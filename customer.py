@@ -3,7 +3,7 @@ from confluent_kafka import Consumer
 import socket
 import threading
 import logging
-from flask import Flask, json
+from flask import Flask, json, make_response
 
 MIN_COMMIT_COUNT = 1
 
@@ -61,8 +61,8 @@ producer = Producer(conf1)
 x = threading.Thread(target=basic_consume_loop, args=(["offerings_data"],))
 x.start()
 
-@api.route('/customer/getOfferings', methods=['GET'])
-def get_offerings():
+@api.route('/customer/getAllOfferings', methods=['GET'])
+def getAllOfferings():
     producer.produce("offerings", key="cno", value="getOfferings")
     producer.flush()
     event.wait()
@@ -71,6 +71,28 @@ def get_offerings():
     print(data)
     return data
 
+@api.route('/customer/addToCart/<c_id>/<o_id>')
+def addToCart(c_id, o_id):
+    with open("customers.txt") as f:
+        text = f.readlines()
+        newText = []
+        for line in text:
+            lineJson = json.loads(line)
+            if lineJson[0] == int(c_id):
+                lineJson.append(int(o_id))
+                newLine = json.dumps(lineJson)
+                newText.append(newLine + "\n")
+            else:
+                newText.append(line)
+    
+    f = open("customers.txt", "w")
+    f.write(''.join(newText))
+    f.close()
+    
+    return make_response(
+        'Test worked!',
+        200
+    )
 api.run()
 
 print("Message send")

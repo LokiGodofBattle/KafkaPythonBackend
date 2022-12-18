@@ -1,0 +1,4 @@
+[1, "Pencil (single)", 1, "18.12.2022", "in stock", 1]
+[2, "Pencil (set)", 6, "18.12.2022", "in stock", 1]
+[3, "Toaster", 1, "18.12.2022", "not available", 2]
+[4, "Jacket", 1, "18.12.2022", "in stock", 3]
